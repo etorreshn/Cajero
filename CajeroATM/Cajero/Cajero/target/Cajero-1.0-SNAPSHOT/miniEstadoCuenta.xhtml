@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      lang="es">
+<f:view>
+    <h:head>
+        <title>Mini Estado de Cuenta</title>
+        <meta charset="UTF-8" />
+        <style type="text/css">
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: 'Arial', sans-serif;
+            }
+
+            body {
+                background: linear-gradient(135deg, #1a2a3a, #2c3e50);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                padding: 20px;
+            }
+
+            .atm-machine {
+                width: 800px;
+                background: #2c3e50;
+                border-radius: 20px;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+                overflow: hidden;
+                border: 15px solid #34495e;
+                position: relative;
+            }
+
+            .atm-header {
+                background: #c0392b;
+                color: white;
+                padding: 15px 30px;
+                text-align: center;
+                border-bottom: 5px solid #922b21;
+            }
+
+            .atm-header h1 {
+                font-size: 24px;
+                font-weight: bold;
+                letter-spacing: 1px;
+            }
+
+            .atm-body {
+                display: flex;
+                padding: 30px;
+                background: #34495e;
+                gap: 30px;
+            }
+
+            .screen-container {
+                flex: 1;
+                background: #1a252f;
+                border-radius: 10px;
+                padding: 20px;
+                box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            }
+
+            .atm-screen {
+                background: #8bb5e6;
+                height: 400px;
+                border-radius: 5px;
+                padding: 15px 20px;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+                box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+                font-family: 'Courier New', monospace;
+                color: #000;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .screen-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(135deg, rgba(139, 181, 230, 0.7) 0%, rgba(139, 181, 230, 0.3) 100%);
+                pointer-events: none;
+            }
+
+            .keypad-container {
+                width: 300px;
+                background: #2c3e50;
+                border-radius: 10px;
+                padding: 20px;
+            }
+
+            .keypad {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+
+            .key {
+                background: #ecf0f1;
+                height: 60px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 22px;
+                font-weight: bold;
+                color: #2c3e50;
+                box-shadow: 0 4px 0 #bdc3c7;
+                cursor: pointer;
+                transition: all 0.1s;
+                user-select: none;
+            }
+
+            .key:active {
+                transform: translateY(4px);
+                box-shadow: 0 0 0 #bdc3c7;
+            }
+
+            .function-keys {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .func-key {
+                background: #e67e22;
+                height: 50px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+                font-weight: bold;
+                color: white;
+                box-shadow: 0 4px 0 #d35400;
+                cursor: pointer;
+                transition: all 0.1s;
+                user-select: none;
+            }
+
+            .func-key:active {
+                transform: translateY(4px);
+                box-shadow: 0 0 0 #d35400;
+            }
+
+            .card-slot {
+                width: 100%;
+                height: 10px;
+                background: #7f8c8d;
+                margin: 20px 0;
+                border-radius: 5px;
+                position: relative;
+            }
+
+            .card-slot::after {
+                content: "Inserte su tarjeta aquí";
+                position: absolute;
+                top: -15px;
+                left: 0;
+                right: 0;
+                text-align: center;
+                color: #ecf0f1;
+                font-size: 12px;
+            }
+
+            .money-slot {
+                width: 100%;
+                height: 40px;
+                background: #7f8c8d;
+                margin: 20px 0;
+                border-radius: 5px;
+                position: relative;
+            }
+
+            .money-slot::after {
+                content: "Retire su dinero aquí";
+                position: absolute;
+                top: -15px;
+                left: 0;
+                right: 0;
+                text-align: center;
+                color: #ecf0f1;
+                font-size: 12px;
+            }
+
+            .receipt-slot {
+                width: 80%;
+                height: 5px;
+                background: #7f8c8d;
+                margin: 20px auto;
+                border-radius: 5px;
+                position: relative;
+            }
+
+            .receipt-slot::after {
+                content: "Comprobante";
+                position: absolute;
+                top: -20px;
+                left: 0;
+                right: 0;
+                text-align: center;
+                color: #ecf0f1;
+                font-size: 12px;
+            }
+
+            .atm-footer {
+                background: #34495e;
+                padding: 15px;
+                text-align: center;
+                color: #ecf0f1;
+                font-size: 14px;
+                border-top: 2px solid #2c3e50;
+            }
+
+            .estado-container {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                text-align: center;
+            }
+
+            .estado-header {
+                color: #2c3e50;
+                font-weight: bold;
+                margin-bottom: 8px;
+                font-size: 16px;
+            }
+
+            .info-section {
+                text-align: left;
+                margin: 5px 0;
+                padding: 8px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 5px;
+                width: 100%;
+            }
+
+            .info-row {
+                display: flex;
+                justify-content: space-between;
+                margin: 3px 0;
+                padding: 2px 0;
+                font-size: 12px;
+            }
+
+            .info-label {
+                font-weight: bold;
+                color: #2c3e50;
+            }
+
+            .info-value {
+                color: #2c3e50;
+            }
+
+            .balance {
+                font-size: 16px;
+                color: #27ae60;
+                margin: 8px 0;
+                font-weight: bold;
+            }
+
+            .movimientos-section {
+                flex: 1;
+                margin: 5px 0;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 5px;
+                padding: 8px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .movimientos-header {
+                color: #2c3e50;
+                font-weight: bold;
+                margin-bottom: 5px;
+                font-size: 13px;
+                text-align: center;
+            }
+
+            .movimientos-container {
+                flex: 1;
+                overflow-y: auto;
+                max-height: 120px;
+                border: 1px solid #2c3e50;
+                border-radius: 3px;
+                background: rgba(255, 255, 255, 0.3);
+                padding: 3px;
+            }
+
+            .movimiento-item {
+                display: flex;
+                justify-content: space-between;
+                margin: 2px 0;
+                padding: 1px 3px;
+                border-bottom: 1px dotted #2c3e50;
+                font-size: 10px;
+            }
+
+            .movimiento-fecha {
+                color: #2c3e50;
+                font-weight: bold;
+                min-width: 45px;
+            }
+
+            .movimiento-tipo {
+                color: #2c3e50;
+                flex: 1;
+                text-align: left;
+                margin: 0 3px;
+                font-size: 9px;
+            }
+
+            .movimiento-monto {
+                color: #2c3e50;
+                font-weight: bold;
+                min-width: 45px;
+                text-align: right;
+                font-size: 9px;
+            }
+
+            .monto-positivo {
+                color: #27ae60;
+            }
+
+            .monto-negativo {
+                color: #c0392b;
+            }
+
+            .monto-neutral {
+                color: #2c3e50;
+            }
+
+            .scroll-indicator {
+                color: #2c3e50;
+                font-size: 8px;
+                text-align: center;
+                margin-top: 3px;
+                font-style: italic;
+            }
+
+            .hidden-submit {
+                display: none;
+            }
+
+            .note {
+                color: #2c3e50;
+                font-size: 9px;
+                margin-top: 5px;
+                font-style: italic;
+                text-align: center;
+            }
+
+            .sin-movimientos {
+                color: #2c3e50;
+                text-align: center;
+                font-style: italic;
+                margin: 10px 0;
+                font-size: 11px;
+            }
+
+            /* Scrollbar personalizado */
+            .movimientos-container::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .movimientos-container::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 2px;
+            }
+
+            .movimientos-container::-webkit-scrollbar-thumb {
+                background: #2c3e50;
+                border-radius: 2px;
+            }
+
+            .movimientos-container::-webkit-scrollbar-thumb:hover {
+                background: #1a252f;
+            }
+        </style>
+    </h:head>
+
+    <h:body>
+        <div class="atm-machine">
+            <div class="atm-header">
+                <h1>BANCO MANCO - MINI ESTADO</h1>
+            </div>
+
+            <div class="atm-body">
+                <div class="screen-container">
+                    <div class="atm-screen">
+                        <div class="screen-overlay"></div>
+
+                        <div class="estado-container">
+                            <h:form id="estadoForm">
+                                <div class="estado-header">
+                                    RESUMEN DE CUENTA
+                                </div>
+
+                                <div class="info-section">
+                                    <div class="info-row">
+                                        <span class="info-label">Cuenta:</span>
+                                        <span class="info-value">#{loginBean.numeroCuenta}</span>
+                                    </div>
+
+                                    <div class="info-row">
+                                        <span class="info-label">Cliente:</span>
+                                        <span class="info-value">#{loginBean.nombreCliente}</span>
+                                    </div>
+                                </div>
+
+                                <div class="balance">
+                                    Saldo: #{loginBean.saldoFormateado}
+                                </div>
+
+                                <div class="movimientos-section">
+                                    <div class="movimientos-header">
+                                        ÚLTIMOS MOVIMIENTOS
+                                    </div>
+                                    <div class="movimientos-container">
+                                        <h:panelGroup rendered="#{empty loginBean.obtenerMovimientosCuenta()}">
+                                            <div class="sin-movimientos">
+                                                No hay movimientos
+                                            </div>
+                                        </h:panelGroup>
+
+                                        <h:dataTable value="#{loginBean.obtenerMovimientosCuenta()}" var="movimiento"
+                                                     style="width: 100%; border: none; background: transparent;">
+                                            <h:column>
+                                                <div class="movimiento-item">
+                                                    <span class="movimiento-fecha">
+                                                        #{movimiento[0].substring(8,10)}/#{movimiento[0].substring(5,7)}
+                                                    </span>
+                                                    <span class="movimiento-tipo">
+                                                        #{loginBean.formatearTipoMovimiento(movimiento[1])}
+                                                    </span>
+                                                    <span class="movimiento-monto #{loginBean.getClaseMonto(movimiento[1], movimiento[2])}">
+                                                        Lps. #{movimiento[2]}
+                                                    </span>
+                                                </div>
+                                            </h:column>
+                                        </h:dataTable>
+                                    </div>
+                                    <div class="scroll-indicator">
+                                        ↑ Desplácese ↑
+                                    </div>
+                                </div>
+
+                                <div class="note">
+                                    * Últimos 10 movimientos. Para historial completo visite sucursal.
+                                </div>
+
+                                <h:commandButton id="volverBtn" value="Volver al Menú"
+                                                 action="index.xhtml?faces-redirect=true"
+                                                 styleClass="hidden-submit" />
+                            </h:form>
+                        </div>
+                    </div>
+
+                    <div class="card-slot"></div>
+                    <div class="money-slot"></div>
+                    <div class="receipt-slot"></div>
+                </div>
+
+                <div class="keypad-container">
+                    <div class="keypad">
+                        <div class="key" data-value="1">1</div>
+                        <div class="key" data-value="2">2</div>
+                        <div class="key" data-value="3">3</div>
+                        <div class="key" data-value="4">4</div>
+                        <div class="key" data-value="5">5</div>
+                        <div class="key" data-value="6">6</div>
+                        <div class="key" data-value="7">7</div>
+                        <div class="key" data-value="8">8</div>
+                        <div class="key" data-value="9">9</div>
+                        <div class="key" data-value=".">.</div>
+                        <div class="key" data-value="0">0</div>
+                        <div class="key" data-value="clear">C</div>
+                    </div>
+
+                    <div class="function-keys">
+                        <div class="func-key" data-action="accept">Aceptar</div>
+                        <div class="func-key" data-action="cancel">Cancelar</div>
+                        <div class="func-key" data-action="correct">Corregir</div>
+                        <div class="func-key" data-action="continue">Continuar</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="atm-footer">
+                <p>Operación segura - Para emergencias llame al 0800-123-4567</p>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            //<![CDATA[
+            // Variables para el control del teclado
+            var currentInput = null;
+            var inputValue = '';
+
+            // Función para manejar teclas numéricas
+            var keys = document.querySelectorAll('.key[data-value]');
+            for (var i = 0; i < keys.length; i++) {
+                keys[i].addEventListener('click', function() {
+                    var value = this.getAttribute('data-value');
+
+                    if (value === 'clear') {
+                        // Limpiar campo actual
+                        if (currentInput) {
+                            currentInput.value = '';
+                            inputValue = '';
+                        }
+                    } else {
+                        // Agregar valor al campo actual
+                        if (currentInput) {
+                            currentInput.value += value;
+                            inputValue += value;
+                        }
+                    }
+
+                    // Efecto visual
+                    this.style.transform = 'translateY(4px)';
+                    this.style.boxShadow = '0 0 0 #bdc3c7';
+                    var self = this;
+                    setTimeout(function() {
+                        self.style.transform = '';
+                        self.style.boxShadow = '0 4px 0 #bdc3c7';
+                    }, 100);
+                });
+            }
+
+            // Función para manejar botones de función
+            var funcKeys = document.querySelectorAll('.func-key');
+            for (var j = 0; j < funcKeys.length; j++) {
+                funcKeys[j].addEventListener('click', function() {
+                    var action = this.getAttribute('data-action');
+
+                    switch(action) {
+                        case 'accept':
+                            // Volver al menú principal
+                            var volverBtn = document.getElementById('estadoForm:volverBtn');
+                            if (volverBtn) {
+                                volverBtn.click();
+                            }
+                            break;
+                        case 'cancel':
+                            // Volver al menú principal
+                            var volverBtn = document.getElementById('estadoForm:volverBtn');
+                            if (volverBtn) {
+                                volverBtn.click();
+                            }
+                            break;
+                        case 'correct':
+                            // No aplica para estado de cuenta
+                            break;
+                        case 'continue':
+                            // No aplica para estado de cuenta
+                            break;
+                    }
+
+                    // Efecto visual
+                    this.style.transform = 'translateY(4px)';
+                    this.style.boxShadow = '0 0 0 #d35400';
+                    var selfFunc = this;
+                    setTimeout(function() {
+                        selfFunc.style.transform = '';
+                        selfFunc.style.boxShadow = '0 4px 0 #d35400';
+                    }, 100);
+                });
+            }
+
+            // Inicializar: no hay campos de entrada para seleccionar
+            document.addEventListener('DOMContentLoaded', function() {
+                // No hay campos de entrada en esta pantalla
+            });
+
+            // Manejar clic en campos de entrada (no aplica aquí)
+            document.addEventListener('click', function(e) {
+                // No hay campos de entrada en esta pantalla
+            });
+            //]]>
+        </script>
+    </h:body>
+</f:view>
+</html>

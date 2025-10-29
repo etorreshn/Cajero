@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      lang="es">
+<f:view>
+    <h:head>
+        <title>Transferencia entre Cuentas</title>
+        <meta charset="UTF-8" />
+        <style type="text/css">
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: 'Arial', sans-serif;
+            }
+
+            body {
+                background: linear-gradient(135deg, #1a2a3a, #2c3e50);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                padding: 20px;
+            }
+
+            .atm-machine {
+                width: 800px;
+                background: #2c3e50;
+                border-radius: 20px;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+                overflow: hidden;
+                border: 15px solid #34495e;
+                position: relative;
+            }
+
+            .atm-header {
+                background: #c0392b;
+                color: white;
+                padding: 15px 30px;
+                text-align: center;
+                border-bottom: 5px solid #922b21;
+            }
+
+            .atm-header h1 {
+                font-size: 24px;
+                font-weight: bold;
+                letter-spacing: 1px;
+            }
+
+            .atm-body {
+                display: flex;
+                padding: 30px;
+                background: #34495e;
+                gap: 30px;
+            }
+
+            .screen-container {
+                flex: 1;
+                background: #1a252f;
+                border-radius: 10px;
+                padding: 20px;
+                box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            }
+
+            .atm-screen {
+                background: #8bb5e6;
+                height: 400px;
+                border-radius: 5px;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+                font-family: 'Courier New', monospace;
+                color: #000;
+                position: relative;
+                overflow: hidden;
+                text-align: center;
+            }
+
+            .screen-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(135deg, rgba(139, 181, 230, 0.7) 0%, rgba(139, 181, 230, 0.3) 100%);
+                pointer-events: none;
+            }
+
+            .transferencia-container {
+                background: rgba(255, 255, 255, 0.9);
+                padding: 20px;
+                border-radius: 10px;
+                border: 3px solid #2c3e50;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+                width: 100%;
+                max-width: 380px;
+                height: 360px;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .transferencia-titulo {
+                font-size: 20px;
+                font-weight: bold;
+                color: #2c3e50; /* IGUAL QUE RETIROS */
+                margin-bottom: 15px;
+                text-align: center;
+                line-height: 1.2;
+            }
+
+            .saldo-info {
+                font-size: 13px;
+                color: #7f8c8d; /* IGUAL QUE RETIROS (.saldo-info) */
+                margin-bottom: 15px;
+                padding: 8px;
+                background: #ecf0f1; /* IGUAL QUE RETIROS */
+                border-radius: 5px;
+                line-height: 1.3;
+                text-align: center;
+            }
+
+            .input-group {
+                margin-bottom: 12px;
+                text-align: left;
+            }
+
+            .input-label {
+                font-size: 14px;
+                font-weight: bold;
+                color: #2c3e50; /* IGUAL QUE RETIROS (label) */
+                margin-bottom: 5px;
+                display: block;
+            }
+
+            .input-field {
+                font-size: 16px;
+                padding: 8px;
+                margin: 3px 0;
+                width: 100%;
+                text-align: center;
+                border: 2px solid #2c3e50; /* IGUAL QUE RETIROS */
+                border-radius: 5px;
+                background: white; /* IGUAL QUE RETIROS */
+                font-weight: bold;
+                color: #000; /* IGUAL QUE RETIROS (.monto-input) */
+            }
+
+            .input-field::placeholder {
+                color: #7f8c8d; /* IGUAL QUE RETIROS */
+            }
+
+            .input-field:focus {
+                outline: none;
+                border-color: #e67e22;
+                background: #fffacd;
+            }
+
+            .mensaje-transferencia {
+                font-size: 13px;
+                font-weight: bold;
+                margin: 12px 0;
+                padding: 8px;
+                border-radius: 5px;
+                text-align: center;
+                min-height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 1.2;
+            }
+
+            .mensaje-exito {
+                background: #d4edda; /* IGUAL QUE RETIROS */
+                color: #155724; /* IGUAL QUE RETIROS */
+                border: 1px solid #c3e6cb; /* IGUAL QUE RETIROS */
+            }
+
+            .mensaje-error {
+                background: #f8d7da; /* IGUAL QUE RETIROS */
+                color: #721c24; /* IGUAL QUE RETIROS */
+                border: 1px solid #f5c6cb; /* IGUAL QUE RETIROS */
+            }
+
+            .keypad-container {
+                width: 300px;
+                background: #2c3e50;
+                border-radius: 10px;
+                padding: 20px;
+            }
+
+            .keypad {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+
+            .key {
+                background: #ecf0f1;
+                height: 60px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 22px;
+                font-weight: bold;
+                color: #2c3e50;
+                box-shadow: 0 4px 0 #bdc3c7;
+                cursor: pointer;
+                transition: all 0.1s;
+                user-select: none;
+            }
+
+            .key:active {
+                transform: translateY(4px);
+                box-shadow: 0 0 0 #bdc3c7;
+            }
+
+            .function-keys {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .func-key {
+                background: #e67e22;
+                height: 50px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+                font-weight: bold;
+                color: white;
+                box-shadow: 0 4px 0 #d35400;
+                cursor: pointer;
+                transition: all 0.1s;
+                user-select: none;
+            }
+
+            .func-key:active {
+                transform: translateY(4px);
+                box-shadow: 0 0 0 #d35400;
+            }
+
+            .card-slot {
+                width: 100%;
+                height: 10px;
+                background: #7f8c8d;
+                margin: 15px 0;
+                border-radius: 5px;
+                position: relative;
+            }
+
+            .card-slot::after {
+                content: "Inserte su tarjeta aquí";
+                position: absolute;
+                top: -15px;
+                left: 0;
+                right: 0;
+                text-align: center;
+                color: #ecf0f1;
+                font-size: 12px;
+            }
+
+            .dummy-slot {
+                width: 100%;
+                height: 40px;
+                background: #7f8c8d;
+                margin: 15px 0;
+                border-radius: 5px;
+                position: relative;
+                visibility: hidden;
+            }
+
+            .receipt-slot {
+                width: 80%;
+                height: 5px;
+                background: #7f8c8d;
+                margin: 15px auto;
+                border-radius: 5px;
+                position: relative;
+            }
+
+            .receipt-slot::after {
+                content: "Comprobante";
+                position: absolute;
+                top: -20px;
+                left: 0;
+                right: 0;
+                text-align: center;
+                color: #ecf0f1;
+                font-size: 12px;
+            }
+
+            .atm-footer {
+                background: #34495e;
+                padding: 15px;
+                text-align: center;
+                color: #ecf0f1;
+                font-size: 14px;
+                border-top: 2px solid #2c3e50;
+            }
+
+            .hidden-submit {
+                display: none;
+            }
+
+            .campo-activo {
+                background: #fffacd !important;
+                border-color: #e67e22 !important;
+            }
+
+            .info-text {
+                font-size: 12px;
+                color: #7f8c8d; /* IGUAL QUE RETIROS (.saldo-info) */
+                text-align: center;
+                margin: 10px 0;
+                line-height: 1.3;
+                background: #f8f9fa;
+                padding: 6px;
+                border-radius: 4px;
+            }
+
+            .form-content {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+        </style>
+    </h:head>
+
+    <h:body>
+        <f:event type="preRenderView" listener="#{loginBean.verificarAutenticacion}" />
+
+        <div class="atm-machine">
+            <div class="atm-header">
+                <h1>BANCO MANCO - TRANSFERENCIA ENTRE CUENTAS</h1>
+            </div>
+
+            <div class="atm-body">
+                <div class="screen-container">
+                    <div class="atm-screen">
+                        <div class="screen-overlay"></div>
+
+                        <h:panelGroup rendered="#{not empty loginBean.nombreCliente}">
+                            <div class="transferencia-container">
+                                <div class="transferencia-titulo">TRANSFERENCIA</div>
+
+                                <div class="saldo-info">
+                                    Cliente: #{loginBean.nombreCliente}<br/>
+                                    Cuenta: #{loginBean.numeroCuenta}<br/>
+                                    Saldo disponible: #{loginBean.saldoFormateado}
+                                </div>
+
+                                <div class="form-content">
+                                    <h:form id="transferenciaForm">
+                                        <!-- Pantalla normal de transferencia -->
+                                        <h:panelGroup rendered="#{not loginBean.transferenciaExitosa}">
+                                            <div>
+                                                <div class="input-group">
+                                                    <label class="input-label">Cuenta Destino:</label>
+                                                    <h:inputText id="cuentaDestino" value="#{loginBean.cuentaDestino}"
+                                                                 styleClass="input-field campo-activo"
+                                                                 placeholder="Número de cuenta"/>
+                                                </div>
+
+                                                <div class="input-group">
+                                                    <label class="input-label">Monto a transferir (Lps.):</label>
+                                                    <h:inputText id="montoTransferencia" value="#{loginBean.montoTransferencia}"
+                                                                 styleClass="input-field"
+                                                                 placeholder="0.00"/>
+                                                </div>
+
+                                                <div class="info-text">
+                                                    Use el botón CONTINUAR para cambiar entre campos
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <h:panelGroup rendered="#{not empty loginBean.mensajeTransferencia}">
+                                                    <div class="mensaje-transferencia mensaje-error">
+                                                        #{loginBean.mensajeTransferencia}
+                                                    </div>
+                                                </h:panelGroup>
+
+                                                <!-- Botones ocultos -->
+                                                <h:commandButton id="aceptarTransferencia" value="Aceptar"
+                                                                 action="#{loginBean.realizarTransferencia}"
+                                                                 styleClass="hidden-submit" />
+                                                <h:commandButton id="cancelarTransferencia" value="Cancelar"
+                                                                 action="#{loginBean.cancelarTransferencia}"
+                                                                 styleClass="hidden-submit" />
+                                            </div>
+                                        </h:panelGroup>
+
+                                        <!-- Pantalla después de transferencia exitosa -->
+                                        <h:panelGroup rendered="#{loginBean.transferenciaExitosa}">
+                                            <div class="mensaje-transferencia mensaje-exito">
+                                                #{loginBean.mensajeTransferencia}
+                                            </div>
+
+                                            <div class="info-text">
+                                                Presione ACEPTAR para continuar
+                                            </div>
+
+                                            <!-- Botón oculto para finalizar -->
+                                            <h:commandButton id="finalizarTransferencia" value="Finalizar"
+                                                             action="#{loginBean.finalizarTransferencia}"
+                                                             styleClass="hidden-submit" />
+                                        </h:panelGroup>
+                                    </h:form>
+                                </div>
+                            </div>
+                        </h:panelGroup>
+                    </div>
+
+                    <div class="card-slot"></div>
+                    <div class="dummy-slot"></div>
+                    <div class="receipt-slot"></div>
+                </div>
+
+                <div class="keypad-container">
+                    <div class="keypad">
+                        <div class="key" data-value="1">1</div>
+                        <div class="key" data-value="2">2</div>
+                        <div class="key" data-value="3">3</div>
+                        <div class="key" data-value="4">4</div>
+                        <div class="key" data-value="5">5</div>
+                        <div class="key" data-value="6">6</div>
+                        <div class="key" data-value="7">7</div>
+                        <div class="key" data-value="8">8</div>
+                        <div class="key" data-value="9">9</div>
+                        <div class="key" data-value=".">.</div>
+                        <div class="key" data-value="0">0</div>
+                        <div class="key" data-value="clear">C</div>
+                    </div>
+
+                    <div class="function-keys">
+                        <div class="func-key" data-action="accept">Aceptar</div>
+                        <div class="func-key" data-action="cancel">Cancelar</div>
+                        <div class="func-key" data-action="correct">Corregir</div>
+                        <div class="func-key" data-action="continue">Continuar</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="atm-footer">
+                <p>Operación segura - Para emergencias llame al 0800-123-4567</p>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            //<![CDATA[
+            // Variables para el control del teclado
+            var currentInput = document.getElementById('transferenciaForm:cuentaDestino');
+            var currentField = 'cuentaDestino';
+
+            // Función para cambiar el campo activo
+            function cambiarCampo(field) {
+                currentField = field;
+
+                // Remover clase activa de todos los campos
+                var campos = document.querySelectorAll('.input-field');
+                campos.forEach(function(campo) {
+                    campo.classList.remove('campo-activo');
+                });
+
+                // Agregar clase activa al campo actual
+                currentInput = document.getElementById('transferenciaForm:' + field);
+                if (currentInput) {
+                    currentInput.classList.add('campo-activo');
+                    currentInput.focus();
+                }
+            }
+
+            // Función para verificar si hay transferencia exitosa
+            function hayTransferenciaExitosa() {
+                var mensajes = document.querySelectorAll('.mensaje-exito');
+                for (var i = 0; i < mensajes.length; i++) {
+                    if (mensajes[i].offsetParent !== null) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            // Inicializar campo activo
+            document.addEventListener('DOMContentLoaded', function() {
+                cambiarCampo('cuentaDestino');
+            });
+
+            // Función para manejar teclas numéricas
+            var keys = document.querySelectorAll('.key[data-value]');
+            for (var i = 0; i < keys.length; i++) {
+                keys[i].addEventListener('click', function() {
+                    if (hayTransferenciaExitosa()) {
+                        return;
+                    }
+
+                    var value = this.getAttribute('data-value');
+
+                    if (value === 'clear') {
+                        if (currentInput) {
+                            currentInput.value = '';
+                        }
+                    } else {
+                        if (currentInput) {
+                            if (value === '.' && currentInput.value.includes('.')) {
+                                return;
+                            }
+                            currentInput.value += value;
+                        }
+                    }
+
+                    // Efecto visual
+                    this.style.transform = 'translateY(4px)';
+                    this.style.boxShadow = '0 0 0 #bdc3c7';
+                    var self = this;
+                    setTimeout(function() {
+                        self.style.transform = '';
+                        self.style.boxShadow = '0 4px 0 #bdc3c7';
+                    }, 100);
+                });
+            }
+
+            // Función para manejar botones de función
+            var funcKeys = document.querySelectorAll('.func-key');
+            for (var j = 0; j < funcKeys.length; j++) {
+                funcKeys[j].addEventListener('click', function() {
+                    var action = this.getAttribute('data-action');
+                    var transferenciaExitosa = hayTransferenciaExitosa();
+
+                    switch(action) {
+                        case 'accept':
+                            if (transferenciaExitosa) {
+                                // Finalizar transferencia
+                                var finalizarBtn = document.getElementById('transferenciaForm:finalizarTransferencia');
+                                if (finalizarBtn) {
+                                    finalizarBtn.click();
+                                }
+                            } else {
+                                // Realizar transferencia
+                                var cuentaDestino = document.getElementById('transferenciaForm:cuentaDestino');
+                                var monto = document.getElementById('transferenciaForm:montoTransferencia');
+
+                                if (cuentaDestino && cuentaDestino.value.trim() !== '' &&
+                                    monto && monto.value.trim() !== '') {
+                                    var aceptarBtn = document.getElementById('transferenciaForm:aceptarTransferencia');
+                                    if (aceptarBtn) {
+                                        aceptarBtn.click();
+                                    }
+                                }
+                            }
+                            break;
+                        case 'cancel':
+                            if (!transferenciaExitosa) {
+                                var cancelarBtn = document.getElementById('transferenciaForm:cancelarTransferencia');
+                                if (cancelarBtn) {
+                                    cancelarBtn.click();
+                                }
+                            }
+                            break;
+                        case 'correct':
+                            if (!transferenciaExitosa && currentInput && currentInput.value.length > 0) {
+                                currentInput.value = currentInput.value.slice(0, -1);
+                            }
+                            break;
+                        case 'continue':
+                            // Cambiar entre campos
+                            if (!transferenciaExitosa) {
+                                if (currentField === 'cuentaDestino') {
+                                    cambiarCampo('montoTransferencia');
+                                } else {
+                                    cambiarCampo('cuentaDestino');
+                                }
+                            }
+                            break;
+                    }
+
+                    // Efecto visual
+                    this.style.transform = 'translateY(4px)';
+                    this.style.boxShadow = '0 0 0 #d35400';
+                    var selfFunc = this;
+                    setTimeout(function() {
+                        selfFunc.style.transform = '';
+                        selfFunc.style.boxShadow = '0 4px 0 #d35400';
+                    }, 100);
+                });
+            }
+
+            // SOLUCIÓN DE EMERGENCIA - Si no funciona el botón, redirigir automáticamente
+            setInterval(function() {
+                if (hayTransferenciaExitosa()) {
+                    setTimeout(function() {
+                        window.location.href = 'index.xhtml';
+                    }, 3000);
+                }
+            }, 1000);
+            //]]>
+        </script>
+    </h:body>
+</f:view>
+</html>
